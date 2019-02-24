@@ -1,5 +1,5 @@
 import numpy as np
-
+import sys
 
 class Environment:
     # State of the environment
@@ -75,8 +75,42 @@ class Environment:
         }
     }
 
-    def perform_action(self, agent, action):
-        pass
+    def perform_action(self, state, action):
+        typeOfLocation = positions[state["position"]]
+        typeOfAction = ""
+        if(actions[action] <= 3):
+            typeOfAction = 'move'
+        elif(actions[action] <= 6):
+            typeOfAction = 'unload'
+        else:
+            typeOfAction = 'wait'
+
+        if(typeOfAction == 'move'):
+            if(map[state["position"]][action]):
+                state["position"] = map[state["position"]][action]
+                return getReward(state, action)
+            else:
+                return -10000
+
+        elif(typeOfAction == 'unload'):
+            if(typeOfLocation != 'shop'):
+                return -10000
+            else:
+                if(state["position"] == 2):
+                    load = actions[action] - 3
+                    state["shop1_inventory"] = max(3, state["shop1_inventory"]+load)
+                    return getReward(state, action)
+                elif(state["position"] == 5):
+                    load = actions[action] - 3
+                    state["shop2_inventory"] = max(3, state["shop2_inventory"]+load)
+                    return getReward(state, action)
+                else:
+                    print("Unexpected Error")
+                    sys.exit(0)
+
+        else:
+            return getReward(state, action)
+
 
     def __init__(self):
         pass
