@@ -1,5 +1,7 @@
 import numpy as np
 import sys
+import random
+
 
 class Environment:
     # State of the environment
@@ -75,42 +77,75 @@ class Environment:
         }
     }
 
-    def perform_action(self, state, action):
-        typeOfLocation = positions[state["position"]]
-        typeOfAction = ""
-        if(actions[action] <= 3):
-            typeOfAction = 'move'
-        elif(actions[action] <= 6):
-            typeOfAction = 'unload'
+    def get_reward(self, state, action):
+
+        purchase_probability = 0.05
+        iterations = 0
+
+        reward = -0.1
+        shops = ["shop1_inventory", "shop2_inventory"]
+        prob_shops = [0.1, 0.5]
+        for i in range(0, len(shops)):
+            n = random.random()
+            if n <= prob_shops[i]:
+                inventory = self.state[shops[i]]
+                if inventory > 0:
+                    self.state[shops[i]] -= 1
+
+        L = self.actions[action] - 3
+        T = state["truck1_inventory"]
+        if state["position"] == 2:
+            S = state["shop1_inventory"]
+        elif state["position"] == 5:
+            S = state["shop2_inventory"]
         else:
-            typeOfAction = 'wait'
+            print("Unexpected Error")
+            sys.exit(0)
 
-        if(typeOfAction == 'move'):
-            if(map[state["position"]][action]):
-                state["position"] = map[state["position"]][action]
-                return getReward(state, action)
+        T = T - L
+        S = S + L
+        if T < 0 or S > 3:
+            return -10000
+
+        reward += 10 ** (S - 3)
+
+        return reward
+
+    def perform_action(self, state, action):
+        type_of_location = self.positions[state["position"]]
+        type_of_action = ""
+        if self.actions[action] <= 3:
+            type_of_action = 'move'
+        elif self.actions[action] <= 6:
+            type_of_action = 'unload'
+        else:
+            type_of_action = 'wait'
+
+        if type_of_action == 'move':
+            if self.map[state["position"]][action]:
+                state["position"] = self.map[state["position"]][action]
+                return self.get_reward(state, action)
             else:
                 return -10000
 
-        elif(typeOfAction == 'unload'):
-            if(typeOfLocation != 'shop'):
+        elif type_of_action == 'unload':
+            if type_of_location != 'shop':
                 return -10000
             else:
-                if(state["position"] == 2):
-                    load = actions[action] - 3
-                    state["shop1_inventory"] = max(3, state["shop1_inventory"]+load)
-                    return getReward(state, action)
-                elif(state["position"] == 5):
-                    load = actions[action] - 3
-                    state["shop2_inventory"] = max(3, state["shop2_inventory"]+load)
-                    return getReward(state, action)
+                if state["position"] == 2:
+                    load = self.actions[action] - 3
+                    state["shop1_inventory"] = max(3, state["shop1_inventory"] + load)
+                    return self.get_reward(state, action)
+                elif state["position"] == 5:
+                    load = self.actions[action] - 3
+                    state["shop2_inventory"] = max(3, state["shop2_inventory"] + load)
+                    return self.get_reward(state, action)
                 else:
                     print("Unexpected Error")
                     sys.exit(0)
 
         else:
-            return getReward(state, action)
-
+            return self.get_reward(state, action)
 
     def __init__(self):
         pass
