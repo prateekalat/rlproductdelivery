@@ -77,12 +77,10 @@ class Environment:
         }
     }
 
-    def get_reward(self, state, action):
+    def perform_action(self, action):
+        # new_state = state
+        reward = 0
 
-        purchase_probability = 0.05
-        iterations = 0
-
-        reward = -0.1
         shops = ["shop1_inventory", "shop2_inventory"]
         prob_shops = [0.1, 0.5]
         for i in range(0, len(shops)):
@@ -91,27 +89,9 @@ class Environment:
                 inventory = self.state[shops[i]]
                 if inventory > 0:
                     self.state[shops[i]] -= 1
+                else:
+                    reward-=5
 
-        L = self.actions[action] - 3
-        T = state["truck1_inventory"]
-        if state["position"] == 2:
-            S = state["shop1_inventory"]
-        elif state["position"] == 5:
-            S = state["shop2_inventory"]
-        else:
-            print("Unexpected Error")
-            sys.exit(0)
-
-        T = T - L
-        S = S + L
-        if T < 0 or S > 3:
-            return -10000
-
-        reward += 10 ** (S - 3)
-
-        return reward
-
-    def perform_action(self, state, action):
         type_of_location = self.positions[state["position"]]
         type_of_action = ""
         if self.actions[action] <= 3:
@@ -122,9 +102,9 @@ class Environment:
             type_of_action = 'wait'
 
         if type_of_action == 'move':
+            reward -= 0.1
             if self.map[state["position"]][action]:
                 state["position"] = self.map[state["position"]][action]
-                return self.get_reward(state, action)
             else:
                 return -10000
 
@@ -132,20 +112,31 @@ class Environment:
             if type_of_location != 'shop':
                 return -10000
             else:
-                if state["position"] == 2:
-                    load = self.actions[action] - 3
-                    state["shop1_inventory"] = max(3, state["shop1_inventory"] + load)
-                    return self.get_reward(state, action)
+                if self.state["position"] == 2:
+                    L = self.actions[action] - 3
+                    T = self.state["truck1_inventory"]
+                    S = self.state["shop1_inventory"]
+
+                    T = T-L
+                    S = S+L
+                    if(T<0 or S>3):
+                        return -10000
+                    self.state["shop1_inventory"] = S
                 elif state["position"] == 5:
-                    load = self.actions[action] - 3
-                    state["shop2_inventory"] = max(3, state["shop2_inventory"] + load)
-                    return self.get_reward(state, action)
+                    L = self.actions[action] - 3
+                    T = self.state["truck1_inventory"]
+                    S = self.state["shop2_inventory"]
+
+                    T = T-L
+                    S = S+L
+                    if(T<0 or S>3):
+                        return -10000
+                    self.state["shop2_inventory"] = S
                 else:
                     print("Unexpected Error")
                     sys.exit(0)
 
-        else:
-            return self.get_reward(state, action)
+        return reward
 
     def __init__(self):
         pass
