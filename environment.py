@@ -90,9 +90,9 @@ class Environment:
                 if inventory > 0:
                     self.state[shops[i]] -= 1
                 else:
-                    reward-=5
+                    reward -= 5
 
-        type_of_location = self.positions[state["position"]]
+        type_of_location = self.positions[self.state["position"]]
         type_of_action = ""
         if self.actions[action] <= 3:
             type_of_action = 'move'
@@ -103,8 +103,8 @@ class Environment:
 
         if type_of_action == 'move':
             reward -= 0.1
-            if self.map[state["position"]][action]:
-                state["position"] = self.map[state["position"]][action]
+            if self.map[self.state["position"]][action]:
+                self.state["position"] = self.map[self.state["position"]][action]
             else:
                 return -10000
 
@@ -117,19 +117,19 @@ class Environment:
                     T = self.state["truck1_inventory"]
                     S = self.state["shop1_inventory"]
 
-                    T = T-L
-                    S = S+L
-                    if(T<0 or S>3):
+                    T = T - L
+                    S = S + L
+                    if T < 0 or S > 3:
                         return -10000
                     self.state["shop1_inventory"] = S
-                elif state["position"] == 5:
+                elif self.state["position"] == 5:
                     L = self.actions[action] - 3
                     T = self.state["truck1_inventory"]
                     S = self.state["shop2_inventory"]
 
-                    T = T-L
-                    S = S+L
-                    if(T<0 or S>3):
+                    T = T - L
+                    S = S + L
+                    if T < 0 or S > 3:
                         return -10000
                     self.state["shop2_inventory"] = S
                 else:
@@ -140,3 +140,11 @@ class Environment:
 
     def __init__(self):
         pass
+
+    def refresh(self):
+        self.state = {
+            "position": 1,
+            "truck1_inventory": 3,
+            "shop1_inventory": 2,
+            "shop2_inventory": 3
+        }
