@@ -78,7 +78,13 @@ class Environment:
     }
 
     def perform_action(self, action):
-        # new_state = state
+        actionStr = ""
+        for stri, number in self.actions.items():
+            if action == number:
+                actionStr =  stri
+
+        action = actionStr
+        
         reward = 0
 
         shops = ["shop1_inventory", "shop2_inventory"]
@@ -90,7 +96,7 @@ class Environment:
                 if inventory > 0:
                     self.state[shops[i]] -= 1
                 else:
-                    reward -= 5
+                    reward -= 50
 
         type_of_location = self.positions[self.state["position"]]
         type_of_action = ""
@@ -103,7 +109,7 @@ class Environment:
 
         if type_of_action == 'move':
             reward -= 0.1
-            if self.map[self.state["position"]][action]:
+            if action in self.map[self.state["position"]]:
                 self.state["position"] = self.map[self.state["position"]][action]
             else:
                 return -10000
@@ -148,3 +154,7 @@ class Environment:
             "shop1_inventory": 2,
             "shop2_inventory": 3
         }
+
+    def getStateNumber(self):
+        state = self.state
+        return( (4**3)*(state["position"]-1) + (4**2)*(state["truck1_inventory"]) + (4**1)*(state["shop1_inventory"]) + state["shop2_inventory"])

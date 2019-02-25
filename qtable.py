@@ -29,30 +29,34 @@ if __name__ == "__main__":
 
         epochs, penalties, reward = 0, 0, 0
         done = False
+        totalReward = 0
 
         while not done:
-            currState = state
+            currStateNumber = environment.getStateNumber()
             if random.uniform(0, 1) < epsilon:
                 action = random.randint(0, 7)  # random action
             else:
-                action = np.argmax(q_table[state])
+                action = np.argmax(q_table[currStateNumber])
 
             reward = environment.perform_action(action)  # need to return all these ##done,info implement
-            if reward <= -1000:  # decide the no.
+            totalReward += reward
+            newStateNumber = environment.getStateNumber()
+            if totalReward <= -100000:  # decide the no.
                 done = True
 
-            next_max = np.max(q_table[state])
+            next_max = np.max(q_table[newStateNumber])
 
-            q_table[currState, action] = q_table[currState, action] + alpha * (
-                    reward + gamma * next_max - q_table[currState, action])
+            q_table[currStateNumber, action] = q_table[currStateNumber, action] + alpha * (
+                    reward + gamma * next_max - q_table[currStateNumber, action])
 
             # if reward == -10:
             #     penalties += 1  # how much to change??
 
             epochs += 1
         epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-0.1 * epsilon)
-        if i % 100 == 0:
+        if i % 1000 == 0:
             # clear_output(wait=True)
             print('Episode: {}'.format(i))
 
     print('Training Finished..')
+    np.savetxt("qtable.txt", q_table)
