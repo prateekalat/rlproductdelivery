@@ -84,7 +84,7 @@ class Environment:
                 actionStr =  stri
 
         action = actionStr
-        
+
         reward = 0
 
         shops = ["shop1_inventory", "shop2_inventory"]
@@ -96,7 +96,7 @@ class Environment:
                 if inventory > 0:
                     self.state[shops[i]] -= 1
                 else:
-                    reward -= 50
+                    reward -= 5
 
         type_of_location = self.positions[self.state["position"]]
         type_of_action = ""
@@ -109,8 +109,9 @@ class Environment:
 
         if type_of_action == 'move':
             reward -= 0.1
-            if action in self.map[self.state["position"]]:
-                self.state["position"] = self.map[self.state["position"]][action]
+            if self.actions[action] in self.map[self.state["position"]]:
+                # print(1)
+                self.state["position"] = self.map[self.state["position"]][self.actions[action]]
             else:
                 return -10000
 
