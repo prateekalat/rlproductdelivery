@@ -6,7 +6,7 @@ from environment import Environment
 if __name__ == "__main__":
     # s=no.of states,a=no.of actions
     s = 320
-    a = 8
+    a = 11
     q_table = np.zeros([s, a])
     gamma = 0.9
     alpha = 0.1
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         while not done:
             currStateNumber = environment.getStateNumber()
             if random.uniform(0, 1) < epsilon:
-                action = random.randint(0, 7)  # random action
+                action = random.randint(0, 10)  # random action
             else:
                 action = np.argmax(q_table[currStateNumber])
 
