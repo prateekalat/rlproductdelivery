@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     environment = Environment()
 
-    for i in range(1, 100001):
+    for i in range(1, 10001):
         # state reset..
         environment.refresh()
         state = environment.state
@@ -60,3 +60,13 @@ if __name__ == "__main__":
 
     print('Training Finished..')
     np.savetxt("qtable.txt", q_table)
+    for i in range(0, len(q_table)):
+        # print("position: ", (i//64)%5 +1, "truck1: ", (i//16)%4, "shop1: ", (i//4)%4, "shop2: ", i%4)
+        ind = np.argmax(q_table[i])
+
+        actionStr = ""
+        for stri, number in environment.actions.items():
+            if ind == number:
+                actionStr =  stri
+
+        # print(actionStr, max(q_table[i]), "\n")
