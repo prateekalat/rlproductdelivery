@@ -2,7 +2,6 @@ import numpy as np
 import sys
 import random
 
-
 class Environment:
     # State of the environment
     state = {
@@ -23,7 +22,11 @@ class Environment:
         "unload_2": 5,
         "unload_3": 6,
 
-        "wait": 7
+        "load_1": 7,
+        "load_2": 8,
+        "load_3": 9,
+
+        "wait": 10
     }
 
     # Position types are used to decide whether or not certain actions can be performed.
@@ -77,6 +80,13 @@ class Environment:
         }
     }
 
+    rewards = {
+        "fuel" : -0.1,
+        "empty": -5,
+        "unload": 100,
+        "load": 5
+    }
+
     def perform_action(self, action):
         actionStr = ""
         for stri, number in self.actions.items():
@@ -96,19 +106,22 @@ class Environment:
                 if inventory > 0:
                     self.state[shops[i]] -= 1
                 else:
-                    reward -= 5
+                    reward += self.rewards["empty"]
 
         type_of_location = self.positions[self.state["position"]]
         type_of_action = ""
+
         if self.actions[action] <= 3:
             type_of_action = 'move'
         elif self.actions[action] <= 6:
             type_of_action = 'unload'
+        elif self.actions[action] <=9:
+            type_of_action = 'load'
         else:
             type_of_action = 'wait'
 
         if type_of_action == 'move':
-            reward -= 0.1
+            reward += self.rewards["fuel"]
             if self.actions[action] in self.map[self.state["position"]]:
                 # print(1)
                 self.state["position"] = self.map[self.state["position"]][self.actions[action]]
@@ -129,6 +142,8 @@ class Environment:
                     if T < 0 or S > 3:
                         return -10000
                     self.state["shop1_inventory"] = S
+                    self.state["truck1_inventory"] = T
+                    reward+=self.rewards["unload"]
                 elif self.state["position"] == 5:
                     L = self.actions[action] - 3
                     T = self.state["truck1_inventory"]
@@ -139,10 +154,24 @@ class Environment:
                     if T < 0 or S > 3:
                         return -10000
                     self.state["shop2_inventory"] = S
+                    self.state["truck1_inventory"] = T
+                    reward+=self.rewards["unload"]
                 else:
                     print("Unexpected Error")
                     sys.exit(0)
 
+        elif type_of_action == 'load':
+            if type_of_location != 'depot':
+                return -10000
+            else:
+                L = self.actions[action] - 6
+                T = self.state["truck1_inventory"]
+
+                T = T + L
+                if T > 3:
+                    return -10000
+                self.state["truck1_inventory"] = T
+                reward+=self.rewards["load"]
         return reward
 
     def __init__(self):
