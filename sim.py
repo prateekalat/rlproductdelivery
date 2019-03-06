@@ -11,6 +11,7 @@ while(totalReward >= -1000 and totalReward <= 1000):
 	print(s0)
 	stateNumber = (4**3)*(s0["position"]-1) + (4**2)*(s0["truck1_inventory"]) + (4**1)*(s0["shop1_inventory"]) + s0["shop2_inventory"]
 	action = np.argmax(q_table[stateNumber])
+	print(stateNumber, q_table[stateNumber])
 
 	actionStr = ""
 	for stri, number in environment.actions.items():

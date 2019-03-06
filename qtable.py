@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     environment = Environment()
 
-    for i in range(1, 10001):
+    for i in range(1, 100001):
         # state reset..
         environment.refresh()
         state = environment.state
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         while not done:
             currStateNumber = environment.getStateNumber()
             if random.uniform(0, 1) < epsilon:
-                action = random.randint(0, 10)  # random action
+                action = random.randint(0, a - 1)  # random action
             else:
                 action = np.argmax(q_table[currStateNumber])
 
