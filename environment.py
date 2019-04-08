@@ -3,6 +3,14 @@ import sys
 import random
 
 
+def get_dict_key(dictionary, value):
+    final_key = None
+    for key, dict_val in dictionary.items():
+        if value == dict_val:
+            final_key = key
+    return final_key
+
+
 class Environment:
     # State of the environment
     state = {
@@ -89,12 +97,12 @@ class Environment:
     }
 
     def perform_action(self, action):
-        actionStr = ""
-        for stri, number in self.actions.items():
-            if action == number:
-                actionStr = stri
+        # actionStr = ""
+        # for stri, number in self.actions.items():
+        #     if action == number:
+        #         actionStr = stri
 
-        action = actionStr
+        action = get_dict_key(self.actions, action)
 
         reward = 0
 
@@ -189,4 +197,4 @@ class Environment:
     def getStateNumber(self):
         state = self.state
         return ((4 ** 3) * (state["position"] - 1) + (4 ** 2) * (state["truck1_inventory"]) + (4 ** 1) * (
-        state["shop1_inventory"]) + state["shop2_inventory"])
+            state["shop1_inventory"]) + state["shop2_inventory"])

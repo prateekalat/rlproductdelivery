@@ -8,8 +8,8 @@ if __name__ == "__main__":
     s = 320
     a = 11
     q_table = np.zeros([s, a])
-    gamma = 0.9
-    alpha = 0.1
+    gamma = 0.95
+    alpha = 0.5
 
     epsilon = 0.1
     max_epsilon = 1.0
