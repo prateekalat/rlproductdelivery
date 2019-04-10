@@ -5,7 +5,7 @@ from environment import Environment
 
 if __name__ == "__main__":
     # s=no.of states,a=no.of actions
-    s = 320
+    s = 960
     a = 11
     q_table = np.zeros([s, a])
     gamma = 0.95
@@ -20,9 +20,9 @@ if __name__ == "__main__":
     all_penalties = []
     penalties = 0
 
-    environment = Environment()
+    environment = Environment(3, 5)
 
-    for i in range(1, 100001):
+    for i in range(1, 30001):
         # state reset..
         environment.refresh()
         state = environment.state
