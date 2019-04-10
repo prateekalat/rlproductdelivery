@@ -10,11 +10,39 @@ def get_dict_key(dictionary, value):
             final_key = key
     return final_key
 
+def moveTruck(position, action, n, m):
+    reward = 0
+    if action == "go_left":
+        if(position[1] != 0):
+            position[1] -= 1
+            reward = -0.1
+        else:
+            reward = -1000
+    if action == "go_right":
+        if(position[1] != m-1):
+            position[1] += 1
+            reward = -0.1
+        else:
+            reward = -1000
+    if action == "go_up":
+        if(position[0] != 0):
+            position[0] -= 1
+            reward = -0.1
+        else:
+            reward = -1000
+    if action == "go_down":
+        if(position[0] != n-1):
+            position[0] += 1
+            reward = -0.1
+        else:
+            reward = -1000
+    return position, reward
+
 
 class Environment:
     # State of the environment
     state = {
-        "position": 1,
+        "position": [0, 0],
         "truck1_inventory": 3,
         "shop1_inventory": 2,
         "shop2_inventory": 3
@@ -46,47 +74,28 @@ class Environment:
         "location": 2
     }
 
+    # shopArray = [9, 11]
+    # shopArray = [[1, 4], [2, 1]]
+    # depotArray = [2]
+    # depotArray = [[0, 2]]
+
     # Each position is mapped to its type
     positions = {
-        1: position_types["depot"],
-        2: position_types["shop"],
+        0: position_types["location"],
+        1: position_types["location"],
+        2: position_types["depot"],
         3: position_types["location"],
         4: position_types["location"],
-        5: position_types["shop"]
-    }
-
-    # Each position is mapped to a mapping between an action and a position.
-    # Eg. 'map[1]["go_left"] = 2' means 'Going left from 1 takes you to 2'
-    map = {
-        1: {
-            actions["go_left"]: 2,
-            actions["go_right"]: 4
-        },
-
-        2: {
-            actions["go_up"]: 1,
-            actions["go_right"]: 3,
-            actions["go_down"]: 5
-        },
-
-        3: {
-            actions["go_up"]: 1,
-            actions["go_left"]: 2,
-            actions["go_right"]: 4,
-            actions["go_down"]: 5
-        },
-
-        4: {
-            actions["go_up"]: 1,
-            actions["go_left"]: 3,
-            actions["go_down"]: 5
-        },
-
-        5: {
-            actions["go_up"]: 3,
-            actions["go_right"]: 4,
-            actions["go_left"]: 2
-        }
+        5: position_types["location"],
+        6: position_types["location"],
+        7: position_types["location"],
+        8: position_types["location"],
+        9: position_types["shop"],
+        10: position_types["location"],
+        11: position_types["shop"],
+        12: position_types["location"],
+        13: position_types["location"],
+        14: position_types["location"],
     }
 
     rewards = {
@@ -97,11 +106,6 @@ class Environment:
     }
 
     def perform_action(self, action):
-        # actionStr = ""
-        # for stri, number in self.actions.items():
-        #     if action == number:
-        #         actionStr = stri
-
         action = get_dict_key(self.actions, action)
 
         reward = 0
@@ -117,7 +121,10 @@ class Environment:
                 else:
                     reward += self.rewards["empty"]
 
-        type_of_location = self.positions[self.state["position"]]
+        position = self.state["position"]
+        positionInd = position[0]*5 + position[1]
+
+        type_of_location = self.positions[positionInd]
         type_of_action = ""
 
         if self.actions[action] <= 3:
@@ -131,17 +138,24 @@ class Environment:
 
         if type_of_action == 'move':
             reward += self.rewards["fuel"]
-            if self.actions[action] in self.map[self.state["position"]]:
-                # print(1)
-                self.state["position"] = self.map[self.state["position"]][self.actions[action]]
+            position = self.state["position"]
+            newPosition, r = moveTruck(position, action, self.n, self.m)
+            if(r == -1000):
+                return -1000
             else:
-                return -10000
+                self.state["position"] = newPosition
+
+            # if self.actions[action] in self.map[self.state["position"]]:
+            #     # print(1)
+            #     self.state["position"] = self.map[self.state["position"]][self.actions[action]]
+            # else:
+            #     return -10000
 
         elif type_of_action == 'unload':
             if type_of_location != self.position_types["shop"]:
                 return -10000
             else:
-                if self.state["position"] == 2:
+                if self.state["position"] == [1, 4]:
                     L = self.actions[action] - 3
                     T = self.state["truck1_inventory"]
                     S = self.state["shop1_inventory"]
@@ -153,7 +167,7 @@ class Environment:
                     self.state["shop1_inventory"] = S
                     self.state["truck1_inventory"] = T
                     reward += self.rewards["unload"]
-                elif self.state["position"] == 5:
+                elif self.state["position"] == [2, 1]:
                     L = self.actions[action] - 3
                     T = self.state["truck1_inventory"]
                     S = self.state["shop2_inventory"]
@@ -183,12 +197,13 @@ class Environment:
                 reward += self.rewards["load"]
         return reward
 
-    def __init__(self):
-        pass
+    def __init__(self, n, m):
+        self.n = n
+        self.m = m
 
     def refresh(self):
         self.state = {
-            "position": 1,
+            "position": [0, 0],
             "truck1_inventory": 3,
             "shop1_inventory": 2,
             "shop2_inventory": 3
@@ -196,5 +211,10 @@ class Environment:
 
     def getStateNumber(self):
         state = self.state
-        return ((4 ** 3) * (state["position"] - 1) + (4 ** 2) * (state["truck1_inventory"]) + (4 ** 1) * (
+        position = state["position"]
+        positionInd = position[0]*5 + position[1]
+        # print(state["position"], positionInd)
+        return ((4 ** 3) * (positionInd) + (4 ** 2) * (state["truck1_inventory"]) + (4 ** 1) * (
             state["shop1_inventory"]) + state["shop2_inventory"])
+
+
