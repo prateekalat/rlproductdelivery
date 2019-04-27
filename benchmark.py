@@ -2,7 +2,7 @@ from environment import Environment, get_dict_key
 from scipy.spatial.distance import cdist
 import numpy as np
 
-environment = Environment()
+environment = Environment(3,5)
 actions = environment.actions
 
 
