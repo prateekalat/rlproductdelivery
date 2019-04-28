@@ -14,25 +14,25 @@ def get_dict_key(dictionary, value):
 def moveTruck(position, action, n, m):
     reward = 0
     if action == "go_left":
-        if (position[1] != 0):
+        if position[1] != 0:
             position[1] -= 1
             reward = -0.1
         else:
             reward = -1000
     if action == "go_right":
-        if (position[1] != m - 1):
+        if position[1] != m - 1:
             position[1] += 1
             reward = -0.1
         else:
             reward = -1000
     if action == "go_up":
-        if (position[0] != 0):
+        if position[0] != 0:
             position[0] -= 1
             reward = -0.1
         else:
             reward = -1000
     if action == "go_down":
-        if (position[0] != n - 1):
+        if position[0] != n - 1:
             position[0] += 1
             reward = -0.1
         else:
@@ -42,14 +42,12 @@ def moveTruck(position, action, n, m):
 
 class Environment:
     # State of the environment
-    state = {
-        "position": np.array([0, 0]),
-        "truck1_inventory": 3,
-        "shop1_inventory": 2,
-        "shop2_inventory": 3
-    }
 
     # Actions supported by environment
+
+    prob_shops = [0.3, 0.2]
+    # prob_shops = [0, 0]
+
     actions = {
         "go_left": 0,
         "go_right": 1,
@@ -112,11 +110,10 @@ class Environment:
         reward = 0
 
         shops = ["shop1_inventory", "shop2_inventory"]
-        prob_shops = [0.1, 0.5]
         for i in range(0, len(shops)):
             if customer_behavior is None:
                 n = random.random()
-                n = n <= prob_shops[i]
+                n = n <= self.prob_shops[i]
             else:
                 n = customer_behavior[i]
             if n != 0:
@@ -145,11 +142,10 @@ class Environment:
             reward += self.rewards["fuel"]
             position = self.state["position"]
             newPosition, r = moveTruck(position, action, self.n, self.m)
-            if (r == -1000):
+            if r == -1000:
                 return -1000
             else:
                 self.state["position"] = newPosition
-
 
         elif type_of_action == 'unload':
             if type_of_location != self.position_types["shop"]:
@@ -200,6 +196,12 @@ class Environment:
     def __init__(self, n, m):
         self.n = n
         self.m = m
+        self.state = {
+            "position": np.array([0, 0]),
+            "truck1_inventory": 3,
+            "shop1_inventory": 2,
+            "shop2_inventory": 3
+        }
 
     def refresh(self):
         self.state = {

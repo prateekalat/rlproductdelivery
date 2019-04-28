@@ -14,8 +14,15 @@ if __name__ == "__main__":
     alp = []
     simreward = []
     benchmarkreward = []
+    iterations = 100
+    prob_shops = [0.3, 0.2]
 
-    for q in range(80, 100, 1):
+    customer_behaviour = np.random.rand(2, iterations)
+    customer_behaviour[0] = customer_behaviour[0] < prob_shops[0]
+    customer_behaviour[1] = customer_behaviour[1] < prob_shops[1]
+    customer_behaviour = customer_behaviour.T.astype(int)
+
+    for q in range(90, 100, 1):
         alpha = q / float(100)
         q_table = np.zeros([s, a])
         epsilon = 0.1
@@ -53,7 +60,7 @@ if __name__ == "__main__":
                 next_max = np.max(q_table[newStateNumber])
 
                 q_table[currStateNumber, action] = q_table[currStateNumber, action] + alpha * (
-                            reward + gamma * next_max - q_table[currStateNumber, action])
+                        reward + gamma * next_max - q_table[currStateNumber, action])
 
                 # if reward == -10:
                 #     penalties += 1  # how much to change??
@@ -61,8 +68,8 @@ if __name__ == "__main__":
                 epochs += 1
             epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-0.1 * epsilon)
             # if i % 1000 == 0:
-                # clear_output(wait=True)
-                # print('Episode: {}'.format(i))
+            # clear_output(wait=True)
+            # print('Episode: {}'.format(i))
 
         print('Training Finished..')
         np.savetxt("qtable.txt", q_table)
@@ -77,8 +84,8 @@ if __name__ == "__main__":
 
         print(q)
         # print(actionStr, max(q_table[i]), "\n")
+        sim_reward, heuristic_reward = simrew(customer_behaviour)
         alp.append(alpha)
-        sim_reward, heuristic_reward = simrew()
         simreward.append(sim_reward)
         benchmarkreward.append(heuristic_reward)
         print("SimReward: {}".format(simreward))
