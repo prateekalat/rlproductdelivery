@@ -5,8 +5,10 @@ import numpy as np
 environment = Environment(3,5)
 actions = environment.actions
 
-
 def mdist(A, B):
+    # print(A, B)
+    A = A.reshape(1, -1)
+    B = B.reshape(1, -1)
     return cdist(A, B, metric='cityblock')
 
 
@@ -18,14 +20,14 @@ def get_unload_action(truck_inventory, shop_inventory):
         return actions[get_dict_key(actions, 3 + max_acceptable_inventory)]
 
 
-def benchmark_heuristic():
+def benchmark_heuristic(state):
     actions = environment.actions
-
-    state = environment.state
+    # state = environment.state
     truck_position = state["position"]
     depot_position = np.array([0, 1])
     shop1_position = np.array([1, 2])
     shop2_position = np.array([6, 5])
+
 
     # Check empty truck
     if state["truck1_inventory"] == 0:

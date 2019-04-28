@@ -42,7 +42,7 @@ def moveTruck(position, action, n, m):
 class Environment:
     # State of the environment
     state = {
-        "position": [0, 0],
+        "position": np.array([0, 0]),
         "truck1_inventory": 3,
         "shop1_inventory": 2,
         "shop2_inventory": 3
