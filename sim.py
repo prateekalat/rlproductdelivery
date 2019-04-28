@@ -14,11 +14,17 @@ def simrew():
     totalReward2 = 0
     # while(totalReward >= -1000 and totalReward <= 1000):
     iterations = 100
+    prob_shops = [0.1, 0.5]
+    customer_behaviour = np.random.rand(2, iterations)
+    customer_behaviour[0] = customer_behaviour[0] < prob_shops[0]
+    customer_behaviour[1] = customer_behaviour[1] < prob_shops[1]
+    customer_behaviour = customer_behaviour.T.astype(int)
+
+    print(customer_behaviour[:10])
     for i in range(iterations):
         # continue
         print(s0)
         stateNumber = environment.getStateNumber()
-        # stateNumber = (4**3)*(s0["position"]-1) + (4**2)*(s0["truck1_inventory"]) + (4**1)*(s0["shop1_inventory"]) + s0["shop2_inventory"]
         action = np.argmax(q_table[stateNumber])
         # print(stateNumber, q_table[stateNumber])
 
@@ -29,13 +35,16 @@ def simrew():
 
         action = actionStr
 
-        reward = environment.perform_action(environment.actions[action])
+        print("Behavior: {}".format(customer_behaviour[i]))
+        reward = environment.perform_action(environment.actions[action], customer_behaviour[i])
         totalReward1 += reward
         s0 = environment.state
 
     # print(action, totalReward1, "\n")
     environment = Environment(3, 5)
     s0 = environment.state
+    print(customer_behaviour[:3])
+    print("---STARTING HEURISTIC--")
     for i in range(iterations):
         print(s0)
         stateNumber = environment.getStateNumber()
@@ -49,7 +58,8 @@ def simrew():
 
         action = actionStr
         print(action)
-        reward = environment.perform_action(environment.actions[action])
+        # print("Behavior: {}".format(customer_behaviour[i]))
+        reward = environment.perform_action(environment.actions[action], customer_behaviour[i])
         totalReward2 += reward
         s0 = environment.state
     return totalReward1, totalReward2

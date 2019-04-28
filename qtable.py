@@ -83,8 +83,8 @@ if __name__ == "__main__":
         benchmarkreward.append(b)
         print(benchmarkreward)
 
-    # plt.plot(alp, simreward, 'r')
-    # plt.plot(alp, benchmarkreward, 'b')
-    # plt.xlabel("alpha")
-    # plt.ylabel("Total Reward")
-    # plt.show()
+    plt.plot(alp, simreward, 'r')
+    plt.plot(alp, benchmarkreward, 'b')
+    plt.xlabel("alpha")
+    plt.ylabel("Total Reward")
+    plt.show()

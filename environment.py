@@ -106,7 +106,7 @@ class Environment:
         "load": 5
     }
 
-    def perform_action(self, action):
+    def perform_action(self, action, customer_behavior=None):
         action = get_dict_key(self.actions, action)
 
         reward = 0
@@ -114,8 +114,13 @@ class Environment:
         shops = ["shop1_inventory", "shop2_inventory"]
         prob_shops = [0.1, 0.5]
         for i in range(0, len(shops)):
-            n = random.random()
-            if n <= prob_shops[i]:
+            if customer_behavior is None:
+                print("Generating new customer behavior")
+                n = random.random()
+                n = n <= prob_shops[i]
+            else:
+                n = customer_behavior[i]
+            if n != 0:
                 inventory = self.state[shops[i]]
                 if inventory > 0:
                     self.state[shops[i]] -= 1
@@ -151,7 +156,6 @@ class Environment:
             if type_of_location != self.position_types["shop"]:
                 return -10000
             else:
-                # print(self.state["position"] == np.array([1, 4]))
                 if (self.state["position"] == [1, 4]).all():
                     L = self.actions[action] - 3
                     T = self.state["truck1_inventory"]
@@ -210,6 +214,5 @@ class Environment:
         state = self.state
         position = state["position"]
         positionInd = position[0] * 5 + position[1]
-        # print(state["position"], positionInd)
         return ((4 ** 3) * (positionInd) + (4 ** 2) * (state["truck1_inventory"]) + (4 ** 1) * (
             state["shop1_inventory"]) + state["shop2_inventory"])
