@@ -10,28 +10,29 @@ def get_dict_key(dictionary, value):
             final_key = key
     return final_key
 
+
 def moveTruck(position, action, n, m):
     reward = 0
     if action == "go_left":
-        if(position[1] != 0):
+        if (position[1] != 0):
             position[1] -= 1
             reward = -0.1
         else:
             reward = -1000
     if action == "go_right":
-        if(position[1] != m-1):
+        if (position[1] != m - 1):
             position[1] += 1
             reward = -0.1
         else:
             reward = -1000
     if action == "go_up":
-        if(position[0] != 0):
+        if (position[0] != 0):
             position[0] -= 1
             reward = -0.1
         else:
             reward = -1000
     if action == "go_down":
-        if(position[0] != n-1):
+        if (position[0] != n - 1):
             position[0] += 1
             reward = -0.1
         else:
@@ -122,7 +123,7 @@ class Environment:
                     reward += self.rewards["empty"]
 
         position = self.state["position"]
-        positionInd = position[0]*5 + position[1]
+        positionInd = position[0] * 5 + position[1]
 
         type_of_location = self.positions[positionInd]
         type_of_action = ""
@@ -140,22 +141,18 @@ class Environment:
             reward += self.rewards["fuel"]
             position = self.state["position"]
             newPosition, r = moveTruck(position, action, self.n, self.m)
-            if(r == -1000):
+            if (r == -1000):
                 return -1000
             else:
                 self.state["position"] = newPosition
 
-            # if self.actions[action] in self.map[self.state["position"]]:
-            #     # print(1)
-            #     self.state["position"] = self.map[self.state["position"]][self.actions[action]]
-            # else:
-            #     return -10000
 
         elif type_of_action == 'unload':
             if type_of_location != self.position_types["shop"]:
                 return -10000
             else:
-                if self.state["position"] == [1, 4]:
+                # print(self.state["position"] == np.array([1, 4]))
+                if (self.state["position"] == [1, 4]).all():
                     L = self.actions[action] - 3
                     T = self.state["truck1_inventory"]
                     S = self.state["shop1_inventory"]
@@ -167,7 +164,7 @@ class Environment:
                     self.state["shop1_inventory"] = S
                     self.state["truck1_inventory"] = T
                     reward += self.rewards["unload"]
-                elif self.state["position"] == [2, 1]:
+                elif (self.state["position"] == [2, 1]).all():
                     L = self.actions[action] - 3
                     T = self.state["truck1_inventory"]
                     S = self.state["shop2_inventory"]
@@ -212,9 +209,7 @@ class Environment:
     def getStateNumber(self):
         state = self.state
         position = state["position"]
-        positionInd = position[0]*5 + position[1]
+        positionInd = position[0] * 5 + position[1]
         # print(state["position"], positionInd)
         return ((4 ** 3) * (positionInd) + (4 ** 2) * (state["truck1_inventory"]) + (4 ** 1) * (
             state["shop1_inventory"]) + state["shop2_inventory"])
-
-
