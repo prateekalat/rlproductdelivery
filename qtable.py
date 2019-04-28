@@ -15,7 +15,7 @@ if __name__ == "__main__":
     simreward = []
     benchmarkreward = []
 
-    for q in range(0, 100, 1):
+    for q in range(80, 100, 1):
         alpha = q / float(100)
         q_table = np.zeros([s, a])
         epsilon = 0.1
@@ -78,10 +78,11 @@ if __name__ == "__main__":
         print(q)
         # print(actionStr, max(q_table[i]), "\n")
         alp.append(alpha)
-        o, b = simrew()
-        simreward.append(o)
-        benchmarkreward.append(b)
-        print(benchmarkreward)
+        sim_reward, heuristic_reward = simrew()
+        simreward.append(sim_reward)
+        benchmarkreward.append(heuristic_reward)
+        print("SimReward: {}".format(simreward))
+        print("BenchReward: {}".format(benchmarkreward))
 
     plt.plot(alp, simreward, 'r')
     plt.plot(alp, benchmarkreward, 'b')

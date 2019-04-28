@@ -102,7 +102,7 @@ class Environment:
     rewards = {
         "fuel": -0.1,
         "empty": -5,
-        "unload": 10,
+        "unload": 50,
         "load": 5
     }
 
@@ -115,7 +115,6 @@ class Environment:
         prob_shops = [0.1, 0.5]
         for i in range(0, len(shops)):
             if customer_behavior is None:
-                print("Generating new customer behavior")
                 n = random.random()
                 n = n <= prob_shops[i]
             else:
@@ -204,7 +203,7 @@ class Environment:
 
     def refresh(self):
         self.state = {
-            "position": [0, 0],
+            "position": np.array([0, 0]),
             "truck1_inventory": 3,
             "shop1_inventory": 2,
             "shop2_inventory": 3
