@@ -4,6 +4,7 @@ purchase_probability = 0.05
 iterations = 0
 
 
+
 def get_reward(state, action, environment):
     reward = -0.1
     if purchase_probability * iterations >= 1:

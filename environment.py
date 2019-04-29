@@ -3,6 +3,7 @@ import sys
 import random
 
 
+
 def get_dict_key(dictionary, value):
     final_key = None
     for key, dict_val in dictionary.items():
@@ -104,26 +105,26 @@ class Environment:
         "load": 5
     }
 
-    def perform_action(self, action, customer_behavior=None):
+    def perform_action(self, truck_id, action, customer_behavior=None):
         action = get_dict_key(self.actions, action)
 
         reward = 0
 
-        shops = ["shop1_inventory", "shop2_inventory"]
-        for i in range(0, len(shops)):
+        # shops = ["shop1_inventory", "shop2_inventory"]
+        for index, value in enumerate(self.state["shop_inventory"]):
             if customer_behavior is None:
                 n = random.random()
-                n = n <= self.prob_shops[i]
+                n = n <= self.prob_shops[index]
             else:
-                n = customer_behavior[i]
+                n = customer_behavior[index]
             if n != 0:
-                inventory = self.state[shops[i]]
+                inventory = value
                 if inventory > 0:
-                    self.state[shops[i]] -= 1
+                    self.state["shop_inventory"][index] -= 1
                 else:
                     reward += self.rewards["empty"]
 
-        position = self.state["position"]
+        position = self.state["position"][truck_id]
         positionInd = position[0] * 5 + position[1]
 
         type_of_location = self.positions[positionInd]
@@ -140,40 +141,40 @@ class Environment:
 
         if type_of_action == 'move':
             reward += self.rewards["fuel"]
-            position = self.state["position"]
-            newPosition, r = moveTruck(position, action, self.n, self.m)
+            position = self.state["position"][truck_id]
+            newPosition, r = moveTruck(position, action, self.n, self.m)  # TODO change moveTruck to account for multi-truck
             if r == -1000:
-                return -1000
+                return -1000  # TODO Might be causing high negative reward *FIX*
             else:
-                self.state["position"] = newPosition
+                self.state["position"][truck_id] = newPosition
 
         elif type_of_action == 'unload':
             if type_of_location != self.position_types["shop"]:
                 return -10000
             else:
-                if (self.state["position"] == [1, 4]).all():
+                if (self.state["position"][truck_id] == [1, 4]).all():
                     L = self.actions[action] - 3
-                    T = self.state["truck1_inventory"]
-                    S = self.state["shop1_inventory"]
+                    T = self.state["truck_inventory"][truck_id]
+                    S = self.state["shop_inventory"][0]
 
                     T = T - L
                     S = S + L
                     if T < 0 or S > 3:
                         return -10000
-                    self.state["shop1_inventory"] = S
-                    self.state["truck1_inventory"] = T
+                    self.state["shop_inventory"][0] = S
+                    self.state["truck_inventory"][truck_id] = T
                     reward += self.rewards["unload"]
-                elif (self.state["position"] == [2, 1]).all():
+                elif (self.state["position"][truck_id] == [2, 1]).all():
                     L = self.actions[action] - 3
-                    T = self.state["truck1_inventory"]
-                    S = self.state["shop2_inventory"]
+                    T = self.state["truck_inventory"][truck_id]
+                    S = self.state["shop_inventory"][1]
 
                     T = T - L
                     S = S + L
                     if T < 0 or S > 3:
                         return -10000
-                    self.state["shop2_inventory"] = S
-                    self.state["truck1_inventory"] = T
+                    self.state["shop_inventory"][1] = S
+                    self.state["truck_inventory"][truck_id] = T
                     reward += self.rewards["unload"]
                 else:
                     print("Unexpected Error")
@@ -184,12 +185,12 @@ class Environment:
                 return -10000
             else:
                 L = self.actions[action] - 6
-                T = self.state["truck1_inventory"]
+                T = self.state["truck_inventory"][truck_id]
 
                 T = T + L
                 if T > 3:
                     return -10000
-                self.state["truck1_inventory"] = T
+                self.state["truck_inventory"][truck_id] = T
                 reward += self.rewards["load"]
         return reward
 
@@ -197,23 +198,20 @@ class Environment:
         self.n = n
         self.m = m
         self.state = {
-            "position": np.array([0, 0]),
-            "truck1_inventory": 3,
-            "shop1_inventory": 2,
-            "shop2_inventory": 3
+            "position": np.array([[0, 0], [2, 3]]),
+            "truck_inventory": np.array([3, 3]),
+            "shop_inventory": np.array([2, 3])
         }
 
     def refresh(self):
-        self.state = {
-            "position": np.array([0, 0]),
-            "truck1_inventory": 3,
-            "shop1_inventory": 2,
-            "shop2_inventory": 3
-        }
+        self.state['position'] = np.array([[0, 0], [2, 3]])
+        self.state["truck_inventory"] = np.array([3, 3])
+        self.state["shop_inventory"] = np.array([2, 3])
 
     def getStateNumber(self):
         state = self.state
-        position = state["position"]
-        positionInd = position[0] * 5 + position[1]
-        return ((4 ** 3) * (positionInd) + (4 ** 2) * (state["truck1_inventory"]) + (4 ** 1) * (
-            state["shop1_inventory"]) + state["shop2_inventory"])
+        positionArray = np.array([i[0] * 5 + i[1] for i in state["position"]])  # Each element b/w 0-14
+        shopStateNumber = state["shop_inventory"][0] * 4 + state["shop_inventory"][1]  # Number b/w 0-15
+        truckInventoryState = state["truck_inventory"][0] * 4 + state["truck_inventory"][1]  # Number b/w 0-15
+        positionStateNumber = positionArray[0] * 15 + positionArray[1]  # 0 - 224
+        return (16 ** 2) * positionStateNumber + 16 * shopStateNumber + truckInventoryState  # 0 - 57599

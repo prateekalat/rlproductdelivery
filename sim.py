@@ -31,10 +31,11 @@ def simrew(customer_behaviour):
             if action == number:
                 actionStr = stri
 
+
         action = actionStr
         print(action)
 
-        reward = environment.perform_action(environment.actions[action], customer_behaviour[i])
+        reward = environment.perform_action(environment.actions[action], customer_behaviour[i])  # todo Add truck_id
         totalReward1 += reward
         s0 = environment.state
 
@@ -54,7 +55,7 @@ def simrew(customer_behaviour):
 
         action = actionStr
         print(action)
-        reward = environment.perform_action(environment.actions[action], customer_behaviour[i])
+        reward = environment.perform_action(environment.actions[action], customer_behaviour[i])  # TODO Add truck_id
         totalReward2 += reward
         s0 = environment.state
     print(totalReward2)

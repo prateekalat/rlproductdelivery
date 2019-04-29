@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 from environment import Environment
 from sim import simrew
 
+
 if __name__ == "__main__":
     # s=no.of states,a=no.of actions
-    s = 960
-    a = 11
+    s = 57600
+    a = 11 ** 2
     # q_table = np.zeros([s, a])
     gamma = 0.95
-    # alpha = 0.5
+    alpha = 0.8
     alp = []
     simreward = []
     benchmarkreward = []
@@ -22,8 +23,8 @@ if __name__ == "__main__":
     customer_behaviour[1] = customer_behaviour[1] < prob_shops[1]
     customer_behaviour = customer_behaviour.T.astype(int)
 
-    for q in range(90, 100, 1):
-        alpha = q / float(100)
+    for q in range(99, 100, 1):
+        # alpha = q / float(100)
         q_table = np.zeros([s, a])
         epsilon = 0.1
         max_epsilon = 1.0
@@ -36,7 +37,7 @@ if __name__ == "__main__":
 
         environment = Environment(3, 5)
 
-        for i in range(1, 30001):
+        for i in range(1, 300001):
             # state reset..
             environment.refresh()
             state = environment.state
@@ -45,13 +46,19 @@ if __name__ == "__main__":
             done = False
             totalReward = 0
             while not done:
+                action_array = np.array([0, 0], dtype=int)
                 currStateNumber = environment.getStateNumber()
-                if random.uniform(0, 1) < epsilon:
-                    action = random.randint(0, a - 1)  # random action
-                else:
-                    action = np.argmax(q_table[currStateNumber])
+                for truck_id in range(len(state["position"])):
+                    if random.uniform(0, 1) < epsilon:
+                        action_array[truck_id] = np.random.randint(11)  # random action
+                    else:
+                        if truck_id == 0:
+                            action_array[truck_id] = np.argmax(q_table[currStateNumber]) // 11
+                        elif truck_id == 1:
+                            action_array[truck_id] = np.argmax(q_table[currStateNumber]) % 11
 
-                reward = environment.perform_action(action)  # need to return all these ##done,info implement
+                for truck_id in range(len(state["position"])):
+                    reward += environment.perform_action(truck_id, action_array[truck_id])
                 totalReward += reward
                 newStateNumber = environment.getStateNumber()
                 if totalReward <= -100000:  # decide the no.
@@ -59,40 +66,60 @@ if __name__ == "__main__":
 
                 next_max = np.max(q_table[newStateNumber])
 
+                action = action_array[0]*11 + action_array[1]
+
                 q_table[currStateNumber, action] = q_table[currStateNumber, action] + alpha * (
                         reward + gamma * next_max - q_table[currStateNumber, action])
-
-                # if reward == -10:
-                #     penalties += 1  # how much to change??
-
                 epochs += 1
             epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-0.1 * epsilon)
-            # if i % 1000 == 0:
-            # clear_output(wait=True)
-            # print('Episode: {}'.format(i))
+            if i % 10000 == 0:
+                print("State0", state)
+
+                for j in range(100):
+                    s0 = environment.state
+                    environment.refresh()
+                    print(s0)
+                    sNumber = environment.getStateNumber()
+                    actionNum = np.argmax(q_table[sNumber])
+                    actionStr_array = ["", ""]
+                    for j in range(2):
+                        actionStr = ""
+                        for stri, number in environment.actions.items():
+                            if action_array[j] == number:
+                                actionStr = stri
+                        actionStr_array[j] = actionStr
+
+                    print(actionStr_array)
+
+                print('Episode: {}'.format(i))
 
         print('Training Finished..')
         np.savetxt("qtable.txt", q_table)
+        actionStr_array = ["", ""]
         for i in range(0, len(q_table)):
             # print("position: ", (i//64)%5 +1, "truck1: ", (i//16)%4, "shop1: ", (i//4)%4, "shop2: ", i%4)
             ind = np.argmax(q_table[i])
 
-            actionStr = ""
-            for stri, number in environment.actions.items():
-                if ind == number:
-                    actionStr = stri
+            action_array = np.array([ind//11, ind % 11])
 
-        print(q)
-        # print(actionStr, max(q_table[i]), "\n")
-        sim_reward, heuristic_reward = simrew(customer_behaviour)
-        alp.append(alpha)
-        simreward.append(sim_reward)
-        benchmarkreward.append(heuristic_reward)
-        print("SimReward: {}".format(simreward))
-        print("BenchReward: {}".format(benchmarkreward))
+            for j in range(2):
+                actionStr = ""
+                for stri, number in environment.actions.items():
+                    if ind == number:
+                        actionStr = stri
+                actionStr_array[j] = actionStr
 
-    plt.plot(alp, simreward, 'r')
-    plt.plot(alp, benchmarkreward, 'b')
-    plt.xlabel("alpha")
-    plt.ylabel("Total Reward")
-    plt.show()
+            print(actionStr_array, max(q_table[i]), "\n")
+        # print(q)
+        # sim_reward, heuristic_reward = simrew(customer_behaviour)
+        # alp.append(alpha)
+        # simreward.append(sim_reward)
+        # benchmarkreward.append(heuristic_reward)
+        # print("SimReward: {}".format(simreward))
+        # print("BenchReward: {}".format(benchmarkreward))
+
+    # plt.plot(alp, simreward, 'r')
+    # plt.plot(alp, benchmarkreward, 'b')
+    # plt.xlabel("alpha")
+    # plt.ylabel("Total Reward")
+    # plt.show()

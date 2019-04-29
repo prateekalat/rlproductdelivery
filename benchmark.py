@@ -3,6 +3,7 @@ from scipy.spatial.distance import cdist
 import numpy as np
 
 
+
 def mdist(A, B):
     A = A.reshape(1, -1)
     B = B.reshape(1, -1)
