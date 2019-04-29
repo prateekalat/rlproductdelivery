@@ -19,25 +19,25 @@ def moveTruck(position, action, n, m):
             position[1] -= 1
             reward = -0.1
         else:
-            reward = -1000
+            reward = -100
     if action == "go_right":
         if position[1] != m - 1:
             position[1] += 1
             reward = -0.1
         else:
-            reward = -1000
+            reward = -100
     if action == "go_up":
         if position[0] != 0:
             position[0] -= 1
             reward = -0.1
         else:
-            reward = -1000
+            reward = -100
     if action == "go_down":
         if position[0] != n - 1:
             position[0] += 1
             reward = -0.1
         else:
-            reward = -1000
+            reward = -100
     return position, reward
 
 
@@ -143,14 +143,16 @@ class Environment:
             reward += self.rewards["fuel"]
             position = self.state["position"][truck_id]
             newPosition, r = moveTruck(position, action, self.n, self.m)  # TODO change moveTruck to account for multi-truck
-            if r == -1000:
-                return -1000  # TODO Might be causing high negative reward *FIX*
+            # print("TruckID:{}, New Position:{}, Action:{}".format(truck_id, newPosition, action))
+            if r == -100:
+                return -100
             else:
                 self.state["position"][truck_id] = newPosition
+                # print(self.state)
 
         elif type_of_action == 'unload':
             if type_of_location != self.position_types["shop"]:
-                return -10000
+                return -100
             else:
                 if (self.state["position"][truck_id] == [1, 4]).all():
                     L = self.actions[action] - 3
@@ -160,7 +162,7 @@ class Environment:
                     T = T - L
                     S = S + L
                     if T < 0 or S > 3:
-                        return -10000
+                        return -100
                     self.state["shop_inventory"][0] = S
                     self.state["truck_inventory"][truck_id] = T
                     reward += self.rewards["unload"]
@@ -172,7 +174,7 @@ class Environment:
                     T = T - L
                     S = S + L
                     if T < 0 or S > 3:
-                        return -10000
+                        return -100
                     self.state["shop_inventory"][1] = S
                     self.state["truck_inventory"][truck_id] = T
                     reward += self.rewards["unload"]
@@ -182,14 +184,14 @@ class Environment:
 
         elif type_of_action == 'load':
             if type_of_location != self.position_types["depot"]:
-                return -10000
+                return -100
             else:
                 L = self.actions[action] - 6
                 T = self.state["truck_inventory"][truck_id]
 
                 T = T + L
                 if T > 3:
-                    return -10000
+                    return -100
                 self.state["truck_inventory"][truck_id] = T
                 reward += self.rewards["load"]
         return reward
@@ -199,19 +201,41 @@ class Environment:
         self.m = m
         self.state = {
             "position": np.array([[0, 0], [2, 3]]),
-            "truck_inventory": np.array([3, 3]),
-            "shop_inventory": np.array([2, 3])
+            "shop_inventory": np.array([2, 3]),
+            "truck_inventory": np.array([3, 3])
         }
 
     def refresh(self):
         self.state['position'] = np.array([[0, 0], [2, 3]])
-        self.state["truck_inventory"] = np.array([3, 3])
         self.state["shop_inventory"] = np.array([2, 3])
+        self.state["truck_inventory"] = np.array([3, 3])
 
     def getStateNumber(self):
         state = self.state
+        # print("getStateNumber State:{}".format(state))
         positionArray = np.array([i[0] * 5 + i[1] for i in state["position"]])  # Each element b/w 0-14
         shopStateNumber = state["shop_inventory"][0] * 4 + state["shop_inventory"][1]  # Number b/w 0-15
         truckInventoryState = state["truck_inventory"][0] * 4 + state["truck_inventory"][1]  # Number b/w 0-15
         positionStateNumber = positionArray[0] * 15 + positionArray[1]  # 0 - 224
-        return (16 ** 2) * positionStateNumber + 16 * shopStateNumber + truckInventoryState  # 0 - 57599
+        
+        ans = (16 ** 2) * positionStateNumber + 16 * shopStateNumber + truckInventoryState  # 0 - 57599
+        # print("SAtate Number:{}".format(ans))
+        return ans
+
+    def invGetStateNumber(num):
+        pos = num//256
+        num = num%256
+        shop = num//16
+        num = num%16
+        truck = num
+        pos1 = pos//15
+        pos2 = pos%15
+        posArray = [[pos1//5, pos1%5], [pos2//5, pos2%5]]
+        shopArray = [shop//4, shop%4]
+        truckArray = [truck//4, truck%4]
+        state = {
+            "position": np.array(posArray),
+            "shop_inventory": np.array(shopArray),
+            "truck_inventory": np.array(truckArray)
+        }
+        return state

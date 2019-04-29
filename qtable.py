@@ -61,8 +61,10 @@ if __name__ == "__main__":
                     reward += environment.perform_action(truck_id, action_array[truck_id])
                 totalReward += reward
                 newStateNumber = environment.getStateNumber()
-                if totalReward <= -100000:  # decide the no.
+                # print(totalReward) #totalReward min value = -1000 * ??
+                if totalReward <= -10000 or totalReward >= 1000:  # decide the no.
                     done = True
+                    # sys.exit(0)
 
                 next_max = np.max(q_table[newStateNumber])
 
@@ -73,14 +75,23 @@ if __name__ == "__main__":
                 epochs += 1
             epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-0.1 * epsilon)
             if i % 10000 == 0:
-                print("State0", state)
+                print('Episode: {}'.format(i))
+                environment.refresh()
 
                 for j in range(100):
                     s0 = environment.state
-                    environment.refresh()
-                    print(s0)
+                    print("State:{}".format(s0))
+                    print()
                     sNumber = environment.getStateNumber()
                     actionNum = np.argmax(q_table[sNumber])
+                    reward = [0, 0]
+                    action_array= [actionNum//11, actionNum%11]
+
+                    for truck_id in range(2):
+                        if truck_id == 0:
+                            reward[truck_id] = environment.perform_action(truck_id, actionNum//11)
+                        elif truck_id == 1:
+                            reward[truck_id] = environment.perform_action(truck_id, actionNum%11)
                     actionStr_array = ["", ""]
                     for j in range(2):
                         actionStr = ""
@@ -88,28 +99,19 @@ if __name__ == "__main__":
                             if action_array[j] == number:
                                 actionStr = stri
                         actionStr_array[j] = actionStr
+                    print("Action:{}".format(actionStr_array))
+                    print()
+                    print("NewState: {}".format(s0))
+                    print()
+                    print("Reward:{}".format(reward))
+                    print()
 
-                    print(actionStr_array)
 
-                print('Episode: {}'.format(i))
 
         print('Training Finished..')
         np.savetxt("qtable.txt", q_table)
         actionStr_array = ["", ""]
-        for i in range(0, len(q_table)):
-            # print("position: ", (i//64)%5 +1, "truck1: ", (i//16)%4, "shop1: ", (i//4)%4, "shop2: ", i%4)
-            ind = np.argmax(q_table[i])
-
-            action_array = np.array([ind//11, ind % 11])
-
-            for j in range(2):
-                actionStr = ""
-                for stri, number in environment.actions.items():
-                    if ind == number:
-                        actionStr = stri
-                actionStr_array[j] = actionStr
-
-            print(actionStr_array, max(q_table[i]), "\n")
+        
         # print(q)
         # sim_reward, heuristic_reward = simrew(customer_behaviour)
         # alp.append(alpha)
