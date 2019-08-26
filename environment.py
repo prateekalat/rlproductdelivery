@@ -2,8 +2,6 @@ import numpy as np
 import sys
 import random
 
-
-
 def get_dict_key(dictionary, value):
     final_key = None
     for key, dict_val in dictionary.items():
@@ -46,6 +44,7 @@ class Environment:
 
     # Actions supported by environment
 
+    #e
     prob_shops = [0.3, 0.2]
     # prob_shops = [0, 0]
 
@@ -80,6 +79,8 @@ class Environment:
     # depotArray = [[0, 2]]
 
     # Each position is mapped to its type
+
+    #e
     positions = {
         0: position_types["location"],
         1: position_types["location"],
@@ -102,7 +103,7 @@ class Environment:
         "fuel": -0.1,
         "empty": -5,
         "unload": 50,
-        "load": 5
+        "load": 5,
     }
 
     def perform_action(self, truck_id, action, customer_behavior=None):
@@ -124,6 +125,8 @@ class Environment:
                 else:
                     reward += self.rewards["empty"]
 
+
+        #e
         position = self.state["position"][truck_id]
         positionInd = position[0] * 5 + position[1]
 
@@ -196,7 +199,7 @@ class Environment:
                 reward += self.rewards["load"]
         return reward
 
-    def __init__(self, n, m):
+    def __init__(self, n, m, t, s, i_t, i_s): #dimensions of grid, no. of trucks, no. of shops, max inv of truck, max inv of shop
         self.n = n
         self.m = m
         self.state = {
@@ -213,29 +216,33 @@ class Environment:
     def getStateNumber(self):
         state = self.state
         # print("getStateNumber State:{}".format(state))
-        positionArray = np.array([i[0] * 5 + i[1] for i in state["position"]])  # Each element b/w 0-14
-        shopStateNumber = state["shop_inventory"][0] * 4 + state["shop_inventory"][1]  # Number b/w 0-15
-        truckInventoryState = state["truck_inventory"][0] * 4 + state["truck_inventory"][1]  # Number b/w 0-15
-        positionStateNumber = positionArray[0] * 15 + positionArray[1]  # 0 - 224
+        positionArray = np.array([i[0] * self.m + i[1] for i in state["position"]])  # Each element b/w 0-14
+        shopStateNumber = state["shop_inventory"][0] * i_s + state["shop_inventory"][1]  # Number b/w 0-15
+        truckInventoryState = state["truck_inventory"][0] * i_t + state["truck_inventory"][1]  # Number b/w 0-15
         
-        ans = (16 ** 2) * positionStateNumber + 16 * shopStateNumber + truckInventoryState  # 0 - 57599
-        # print("SAtate Number:{}".format(ans))
+        positionStateNumber = 0
+        for i in range(t):
+            positionStateNumber += positionArray[i] * ((m*n)**(self.t - 1 - i))
+        # positionStateNumber = positionArray[0] * m * n + positionArray[1]  # 0 - 224
+        
+        ans = (self.i_t**self.t) * (self.i_s**self.s) * positionStateNumber + (self.i_t**self.t) * shopStateNumber + truckInventoryState  # 0 - 57599
+        # print("State Number:{}".format(ans))
         return ans
 
-    def invGetStateNumber(num):
-        pos = num//256
-        num = num%256
-        shop = num//16
-        num = num%16
-        truck = num
-        pos1 = pos//15
-        pos2 = pos%15
-        posArray = [[pos1//5, pos1%5], [pos2//5, pos2%5]]
-        shopArray = [shop//4, shop%4]
-        truckArray = [truck//4, truck%4]
-        state = {
-            "position": np.array(posArray),
-            "shop_inventory": np.array(shopArray),
-            "truck_inventory": np.array(truckArray)
-        }
-        return state
+    # def invGetStateNumber(num):
+    #     pos = num//256
+    #     num = num%256
+    #     shop = num//16
+    #     num = num%16
+    #     truck = num
+    #     pos1 = pos//15
+    #     pos2 = pos%15
+    #     posArray = [[pos1//5, pos1%5], [pos2//5, pos2%5]]
+    #     shopArray = [shop//4, shop%4]
+    #     truckArray = [truck//4, truck%4]
+    #     state = {
+    #         "position": np.array(posArray),
+    #         "shop_inventory": np.array(shopArray),
+    #         "truck_inventory": np.array(truckArray)
+    #     }
+    #     return state
