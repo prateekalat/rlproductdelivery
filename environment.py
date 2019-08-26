@@ -18,7 +18,7 @@ def moveTruck(position,truck_id, action, n, m):
             position[truck_id][1] -= 1
             reward = -0.1
             if(((position[1-truck_id][1]-position[truck_id][1])**2+(position[1-truck_id][0]-position[truck_id][0])**2)**0.5)<=1):
-                reward = -50
+                reward = -100
         else:
             reward = -100
     if action == "go_right":
@@ -26,7 +26,7 @@ def moveTruck(position,truck_id, action, n, m):
             position[truck_id][1] += 1
             reward = -0.1
             if(((position[1-truck_id][1]-position[truck_id][1])**2+(position[1-truck_id][0]-position[truck_id][0])**2)**0.5)<=1):
-                reward = -50
+                reward = -100
         else:
             reward = -100
     if action == "go_up":
@@ -34,7 +34,7 @@ def moveTruck(position,truck_id, action, n, m):
             position[truck_id][0] -= 1
             reward = -0.1
             if(((position[1-truck_id][1]-position[truck_id][1])**2+(position[1-truck_id][0]-position[truck_id][0])**2)**0.5)<=1):
-                reward = -50
+                reward = -100
         else:
             reward = -100
     if action == "go_down":
@@ -42,7 +42,7 @@ def moveTruck(position,truck_id, action, n, m):
             position[truck_id][0] += 1
             reward = -0.1
             if(((position[1-truck_id][1]-position[truck_id][1])**2+(position[1-truck_id][0]-position[truck_id][0])**2)**0.5)<=1):
-                reward = -50
+                reward = -100
         else:
             reward = -100
     return position, reward
