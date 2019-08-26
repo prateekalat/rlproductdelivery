@@ -3,7 +3,6 @@ import sys
 import random
 
 
-
 def get_dict_key(dictionary, value):
     final_key = None
     for key, dict_val in dictionary.items():
@@ -12,30 +11,38 @@ def get_dict_key(dictionary, value):
     return final_key
 
 
-def moveTruck(position, action, n, m):
+def moveTruck(position,truck_id, action, n, m):
     reward = 0
     if action == "go_left":
-        if position[1] != 0:
-            position[1] -= 1
+        if position[truck_id][1] != 0:
+            position[truck_id][1] -= 1
             reward = -0.1
+            if(((position[1-truck_id][1]-position[truck_id][1])**2+(position[1-truck_id][0]-position[truck_id][0])**2)**0.5)<=1):
+                reward = -50
         else:
             reward = -100
     if action == "go_right":
-        if position[1] != m - 1:
-            position[1] += 1
+        if position[truck_id][1] != m - 1:
+            position[truck_id][1] += 1
             reward = -0.1
+            if(((position[1-truck_id][1]-position[truck_id][1])**2+(position[1-truck_id][0]-position[truck_id][0])**2)**0.5)<=1):
+                reward = -50
         else:
             reward = -100
     if action == "go_up":
-        if position[0] != 0:
-            position[0] -= 1
+        if position[truck_id][0] != 0:
+            position[truck_id][0] -= 1
             reward = -0.1
+            if(((position[1-truck_id][1]-position[truck_id][1])**2+(position[1-truck_id][0]-position[truck_id][0])**2)**0.5)<=1):
+                reward = -50
         else:
             reward = -100
     if action == "go_down":
-        if position[0] != n - 1:
-            position[0] += 1
+        if position[truck_id][0] != n - 1:
+            position[truck_id][0] += 1
             reward = -0.1
+            if(((position[1-truck_id][1]-position[truck_id][1])**2+(position[1-truck_id][0]-position[truck_id][0])**2)**0.5)<=1):
+                reward = -50
         else:
             reward = -100
     return position, reward
@@ -141,8 +148,8 @@ class Environment:
 
         if type_of_action == 'move':
             reward += self.rewards["fuel"]
-            position = self.state["position"][truck_id]
-            newPosition, r = moveTruck(position, action, self.n, self.m)  # TODO change moveTruck to account for multi-truck
+            position = self.state["position"] #[truck_id]
+            newPosition, r = moveTruck(position,truck_id, action, self.n, self.m)  # TODO change moveTruck to account for multi-truck
             # print("TruckID:{}, New Position:{}, Action:{}".format(truck_id, newPosition, action))
             if r == -100:
                 return -100
