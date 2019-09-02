@@ -6,7 +6,7 @@ from sim import simrew
 
 
 if __name__ == "__main__":
-    s = 57600
+    s = ((5*3)**2)*(4**2)*(4**2)
     a = 11 ** 2
     gamma = 0.95
     alpha = 0.8
@@ -23,7 +23,8 @@ if __name__ == "__main__":
 
     q_table = np.zeros([s, a])
     epsilon = 1
-    environment = Environment(3, 5)
+    N = 3; M = 5; T = 2; S = 2; I_T = 4; I_S = 4
+    environment = Environment(N, M, T, S, I_T, I_S)
     for i in range(1, 100001):
         environment.refresh()
         state = environment.state
@@ -38,8 +39,8 @@ if __name__ == "__main__":
                     action_array[truck_id] = np.random.randint(11)  # random action
                 else:
                     if truck_id == 0:
-                        action_array[truck_id] = np.argmax(q_table[currStateNumber]) // 11
-                    elif truck_id == 1:
+                        action_array[truck_id] = np.argmax(q_table[currStateNumber]) // (11**(T-truck_id))
+                    elif T - truck_id - 1 == 0:
                         action_array[truck_id] = np.argmax(q_table[currStateNumber]) % 11
 
             for truck_id in range(len(state["position"])):
@@ -50,17 +51,18 @@ if __name__ == "__main__":
             newStateNumber = environment.getStateNumber()
             
             if(totalReward <= -15000 or totalReward >= 10000):
-                # print(totalReward)
                 done = True
 
             next_max = np.max(q_table[newStateNumber])
 
-            action = action_array[0]*11 + action_array[1]
+            action = 0
+            for j in range(T):
+                action += action_array[j]*(11**(T-j-1))
 
             q_table[currStateNumber, action] = (1-alpha) * q_table[currStateNumber, action] + alpha * (
                     reward + (gamma * next_max))
 
-            epsilon = epsilon*np.exp(-np.log(2)/10000) #ln2/500
+            epsilon = epsilon*np.exp(-np.log(2)/10000)
             
         if i % 10000 == 0:
             print('Episode: {}'.format(i))

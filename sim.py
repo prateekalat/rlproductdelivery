@@ -5,7 +5,7 @@ from environment import Environment
 
 
 def simrew():
-    environment = Environment(3, 5)
+    environment = Environment(3, 5, 2, 2, 4, 4)
     q_table = np.loadtxt("qtable.txt")
 
     s0 = environment.state
@@ -13,7 +13,7 @@ def simrew():
     totalReward1 = 0
     totalReward2 = 0
     # while(totalReward >= -1000 and totalReward <= 1000):
-    iterations = 100
+    iterations = 200
     prob_shops = environment.prob_shops
     customer_behaviour = np.random.rand(2, iterations)
     customer_behaviour[0] = customer_behaviour[0] < prob_shops[0]
@@ -22,7 +22,9 @@ def simrew():
 
     for i in range(iterations):
         # continue
-        print(s0)
+        print('Position: {}'.format(s0['position']))
+        print('Shops: {}'.format(s0['shop_inventory']))
+        print('Trucks: {}'.format(s0['truck_inventory']))
         stateNumber = environment.getStateNumber()
         action = np.argmax(q_table[stateNumber])
 
@@ -42,16 +44,14 @@ def simrew():
             if action%11 == number:
                 actionStr.append(stri)
 
-
-
-        print(action//11, action%11, actionStr)
+        print('Action: {}'.format(actionStr))
         # reward = environment.perform_action(environment.actions[action], customer_behaviour[i])  # todo Add truck_id
         # totalReward1 += reward
         s0 = environment.state
         print("\n")
 
-    environment = Environment(3, 5)
-    s0 = environment.state
+    # environment = Environment(3, 5)
+    # s0 = environment.state
     # print("---STARTING HEURISTIC--")
     # for i in range(iterations):
     #     print(s0)

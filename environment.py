@@ -202,6 +202,10 @@ class Environment:
     def __init__(self, n, m, t, s, i_t, i_s): #dimensions of grid, no. of trucks, no. of shops, max inv of truck, max inv of shop
         self.n = n
         self.m = m
+        self.t = t
+        self.s = s
+        self.i_s = i_s
+        self.i_t = i_t
         self.state = {
             "position": np.array([[0, 0], [2, 3]]),
             "shop_inventory": np.array([2, 3]),
@@ -217,12 +221,12 @@ class Environment:
         state = self.state
         # print("getStateNumber State:{}".format(state))
         positionArray = np.array([i[0] * self.m + i[1] for i in state["position"]])  # Each element b/w 0-14
-        shopStateNumber = state["shop_inventory"][0] * i_s + state["shop_inventory"][1]  # Number b/w 0-15
-        truckInventoryState = state["truck_inventory"][0] * i_t + state["truck_inventory"][1]  # Number b/w 0-15
+        shopStateNumber = state["shop_inventory"][0] * (self.i_s) + state["shop_inventory"][1]  # Number b/w 0-15
+        truckInventoryState = state["truck_inventory"][0] * (self.i_t) + state["truck_inventory"][1]  # Number b/w 0-15
         
         positionStateNumber = 0
-        for i in range(t):
-            positionStateNumber += positionArray[i] * ((m*n)**(self.t - 1 - i))
+        for i in range(self.t):
+            positionStateNumber += positionArray[i] * ((self.m*self.n)**(self.t - 1 - i))
         # positionStateNumber = positionArray[0] * m * n + positionArray[1]  # 0 - 224
         
         ans = (self.i_t**self.t) * (self.i_s**self.s) * positionStateNumber + (self.i_t**self.t) * shopStateNumber + truckInventoryState  # 0 - 57599
