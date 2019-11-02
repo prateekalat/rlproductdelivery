@@ -1,98 +1,79 @@
 import numpy as np
+import sys
 import random
 import matplotlib.pyplot as plt
 from environment import Environment
-from sim import simrew
 
 if __name__ == "__main__":
-    # s=no.of states,a=no.of actions
-    s = 960
-    a = 11
-    # q_table = np.zeros([s, a])
+    N = 6; M = 10; T = 1; S = 4; I_T = 4; I_S = 4
+    s = ((M*N)**T)*(I_S**S)*(I_T**T)
+    a = 11 ** T
     gamma = 0.95
-    # alpha = 0.5
-    alp = []
-    simreward = []
-    benchmarkreward = []
-    iterations = 100
-    prob_shops = [0.3, 0.2]
+    alpha = 0.8
 
-    customer_behaviour = np.random.rand(2, iterations)
-    customer_behaviour[0] = customer_behaviour[0] < prob_shops[0]
-    customer_behaviour[1] = customer_behaviour[1] < prob_shops[1]
-    customer_behaviour = customer_behaviour.T.astype(int)
+    episodes = 9960
+    steps = 1000
 
-    for q in range(90, 100, 1):
-        alpha = q / float(100)
-        q_table = np.zeros([s, a])
-        epsilon = 0.1
-        max_epsilon = 1.0
-        min_epsilon = 0.01
-        decay_rate = 0.01
+    q_table = np.zeros([s, a])
+    epsilon = 1
 
-        all_epochs = []
-        all_penalties = []
-        penalties = 0
+    #argv = ['qtable.py', fuel, empty, unload]
 
-        environment = Environment(3, 5)
+    rewards = {
+        "fuel": int(sys.argv[1]),
+        "empty": int(sys.argv[2]),
+        "unload": int(sys.argv[3]),
+        "load": int(sys.argv[3]),
+        "wall": int(sys.argv[1]),
+        "illegal": -100
+    }
 
-        for i in range(1, 30001):
-            # state reset..
-            environment.refresh()
-            state = environment.state
+    print(rewards)
 
-            epochs, penalties, reward = 0, 0, 0
-            done = False
-            totalReward = 0
-            while not done:
-                currStateNumber = environment.getStateNumber()
-                if random.uniform(0, 1) < epsilon:
-                    action = random.randint(0, a - 1)  # random action
-                else:
-                    action = np.argmax(q_table[currStateNumber])
+    environment = Environment(N, M, T, S, I_T, I_S, rewards)
 
-                reward = environment.perform_action(action)  # need to return all these ##done,info implement
-                totalReward += reward
-                newStateNumber = environment.getStateNumber()
-                if totalReward <= -100000:  # decide the no.
-                    done = True
+    usedCoords = set()
+    currCoord = 0
+    for episode in range(episodes):
+        environment.refresh()
 
-                next_max = np.max(q_table[newStateNumber])
+        if(episode%(episodes//(N*M)) == 0):
+            while(True):
+                currCoord = random.randint(0, (N*M - 1))
+                if(currCoord not in usedCoords):
+                    break
 
-                q_table[currStateNumber, action] = q_table[currStateNumber, action] + alpha * (
-                        reward + gamma * next_max - q_table[currStateNumber, action])
+            usedCoords.add(currCoord)
+            print("new currCord : {}".format(currCoord))
+        
+        environment.state["position"] = [[currCoord//M, currCoord%M]]
 
-                # if reward == -10:
-                #     penalties += 1  # how much to change??
+        state = environment.state
 
-                epochs += 1
-            epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-0.1 * epsilon)
-            # if i % 1000 == 0:
-            # clear_output(wait=True)
-            # print('Episode: {}'.format(i))
+        reward = 0
+        totalReward = 0
 
-        print('Training Finished..')
-        np.savetxt("qtable.txt", q_table)
-        for i in range(0, len(q_table)):
-            # print("position: ", (i//64)%5 +1, "truck1: ", (i//16)%4, "shop1: ", (i//4)%4, "shop2: ", i%4)
-            ind = np.argmax(q_table[i])
+        for step in range(steps):
+            currStateNumber = environment.getStateNumber()
+            if random.uniform(0, 1) < epsilon:
+                action = random.randint(0, a - 1)  # random action
+            else:
+                action = np.random.choice(np.flatnonzero(q_table[currStateNumber] == q_table[currStateNumber].max())) #to prevent only left actions
 
-            actionStr = ""
-            for stri, number in environment.actions.items():
-                if ind == number:
-                    actionStr = stri
+            reward = environment.perform_action(0, action)
+            totalReward += reward
+            newStateNumber = environment.getStateNumber()
 
-        print(q)
-        # print(actionStr, max(q_table[i]), "\n")
-        sim_reward, heuristic_reward = simrew(customer_behaviour)
-        alp.append(alpha)
-        simreward.append(sim_reward)
-        benchmarkreward.append(heuristic_reward)
-        print("SimReward: {}".format(simreward))
-        print("BenchReward: {}".format(benchmarkreward))
+            next_max = np.max(q_table[newStateNumber])
 
-    plt.plot(alp, simreward, 'r')
-    plt.plot(alp, benchmarkreward, 'b')
-    plt.xlabel("alpha")
-    plt.ylabel("Total Reward")
-    plt.show()
+            q_table[currStateNumber, action] = (1-alpha) * (q_table[currStateNumber, action]) + alpha * (reward + (gamma * next_max))
+
+            epsilon = epsilon*np.exp(-np.log(2)/(step//2)) 
+
+        if episode % 1000 == 0:
+            print('Episode: {}'.format(episode))
+
+    print('Training Finished..')
+
+    filename = "./reward_test/qtable(" + str(sys.argv[1]) + ")(" + str(sys.argv[2]) + ")(" + str(sys.argv[3]) + ").txt"
+    np.savetxt(filename, q_table)

@@ -2,6 +2,15 @@ import numpy as np
 import sys
 import random
 
+default_rewards = {
+    "fuel": -20, 
+    "empty": -5,
+    "unload": 50,
+    "load": 5,
+    "wall": -20,
+    "illegal": -100
+}
+
 
 def get_dict_key(dictionary, value):
     final_key = None
@@ -10,43 +19,11 @@ def get_dict_key(dictionary, value):
             final_key = key
     return final_key
 
-
-def moveTruck(position, action, n, m):
-    reward = 0
-    if action == "go_left":
-        if position[1] != 0:
-            position[1] -= 1
-            reward = -0.1
-        else:
-            reward = -1000
-    if action == "go_right":
-        if position[1] != m - 1:
-            position[1] += 1
-            reward = -0.1
-        else:
-            reward = -1000
-    if action == "go_up":
-        if position[0] != 0:
-            position[0] -= 1
-            reward = -0.1
-        else:
-            reward = -1000
-    if action == "go_down":
-        if position[0] != n - 1:
-            position[0] += 1
-            reward = -0.1
-        else:
-            reward = -1000
-    return position, reward
-
-
 class Environment:
     # State of the environment
 
     # Actions supported by environment
-
-    prob_shops = [0.3, 0.2]
-    # prob_shops = [0, 0]
+    prob_shops = [0.3, 0.2, 0.3, 0.2]
 
     actions = {
         "go_left": 0,
@@ -73,58 +50,105 @@ class Environment:
         "location": 2
     }
 
-    # shopArray = [9, 11]
-    # shopArray = [[1, 4], [2, 1]]
-    # depotArray = [2]
-    # depotArray = [[0, 2]]
+    shopArray = [4, 17, 31, 45]
+    depotArray = [11, 37]
 
     # Each position is mapped to its type
+
+    #e
     positions = {
         0: position_types["location"],
         1: position_types["location"],
-        2: position_types["depot"],
+        2: position_types["location"],
         3: position_types["location"],
-        4: position_types["location"],
+        4: position_types["shop"],
         5: position_types["location"],
         6: position_types["location"],
         7: position_types["location"],
         8: position_types["location"],
-        9: position_types["shop"],
+        9: position_types["location"],
         10: position_types["location"],
-        11: position_types["shop"],
+        11: position_types["depot"],
         12: position_types["location"],
         13: position_types["location"],
         14: position_types["location"],
+        15: position_types["location"],
+        16: position_types["location"],
+        17: position_types["shop"],
+        18: position_types["location"],
+        19: position_types["location"],
+        20: position_types["location"],
+        21: position_types["location"],
+        22: position_types["location"],
+        23: position_types["location"],
+        24: position_types["location"],
+        25: position_types["location"],
+        26: position_types["location"],
+        27: position_types["location"],
+        28: position_types["location"],
+        29: position_types["location"],
+        30: position_types["location"],
+        31: position_types["shop"],
+        32: position_types["location"],
+        33: position_types["location"],
+        34: position_types["location"],
+        35: position_types["location"],
+        36: position_types["location"],
+        37: position_types["depot"],
+        38: position_types["location"],
+        39: position_types["location"],
+        40: position_types["location"],
+        41: position_types["location"],
+        42: position_types["location"],
+        43: position_types["location"],
+        44: position_types["location"],
+        45: position_types["shop"],
+        46: position_types["location"],
+        47: position_types["location"],
+        48: position_types["location"],
+        49: position_types["location"],
+        50: position_types["location"],
+        51: position_types["location"],
+        52: position_types["location"],
+        53: position_types["location"],
+        54: position_types["location"],
+        55: position_types["location"],
+        56: position_types["location"],
+        57: position_types["location"],
+        58: position_types["location"],
+        59: position_types["location"]
     }
 
     rewards = {
-        "fuel": -0.1,
-        "empty": -5,
-        "unload": 50,
-        "load": 5
+        "fuel": -20, #-1, -5, -10, -20
+        "empty": -5, #-1, -5, -10, -20
+        "unload": 50, # 2, 5, 10, 20
+        "load": 50,
+        "wall": -20,
+        "illegal": -100
     }
 
-    def perform_action(self, action, customer_behavior=None):
+    def perform_action(self, truck_id, action, customer_behavior=None):
         action = get_dict_key(self.actions, action)
 
         reward = 0
 
-        shops = ["shop1_inventory", "shop2_inventory"]
-        for i in range(0, len(shops)):
+        for index, value in enumerate(self.state["shop_inventory"]):
             if customer_behavior is None:
                 n = random.random()
-                n = n <= self.prob_shops[i]
+                n = n <= self.prob_shops[index]
             else:
-                n = customer_behavior[i]
+                n = customer_behavior[index]
             if n != 0:
-                inventory = self.state[shops[i]]
+                inventory = value
                 if inventory > 0:
-                    self.state[shops[i]] -= 1
+                    self.state["shop_inventory"][index] -= 1
                 else:
                     reward += self.rewards["empty"]
 
-        position = self.state["position"]
-        positionInd = position[0] * 5 + position[1]
+
+        position = self.state["position"][truck_id]
+        positionInd = position[0] * 10 + position[1]
 
         type_of_location = self.positions[positionInd]
         type_of_action = ""
@@ -140,80 +164,111 @@ class Environment:
 
         if type_of_action == 'move':
             reward += self.rewards["fuel"]
-            position = self.state["position"]
-            newPosition, r = moveTruck(position, action, self.n, self.m)
-            if r == -1000:
-                return -1000
+            position = self.state["position"][truck_id]
+            newPosition, r = self.moveTruck(position, action, self.n, self.m) 
+            if r == self.rewards["wall"]:
+                return self.rewards["wall"]
             else:
-                self.state["position"] = newPosition
+                self.state["position"][truck_id] = newPosition
 
         elif type_of_action == 'unload':
+
             if type_of_location != self.position_types["shop"]:
-                return -10000
+                return self.rewards["illegal"]
             else:
-                if (self.state["position"] == [1, 4]).all():
-                    L = self.actions[action] - 3
-                    T = self.state["truck1_inventory"]
-                    S = self.state["shop1_inventory"]
+                indShop = self.shopArray.index(positionInd)
 
-                    T = T - L
-                    S = S + L
-                    if T < 0 or S > 3:
-                        return -10000
-                    self.state["shop1_inventory"] = S
-                    self.state["truck1_inventory"] = T
-                    reward += self.rewards["unload"]
-                elif (self.state["position"] == [2, 1]).all():
-                    L = self.actions[action] - 3
-                    T = self.state["truck1_inventory"]
-                    S = self.state["shop2_inventory"]
+                L = self.actions[action] - 3
+                T = self.state["truck_inventory"][truck_id]
+                S = self.state["shop_inventory"][indShop]
 
-                    T = T - L
-                    S = S + L
-                    if T < 0 or S > 3:
-                        return -10000
-                    self.state["shop2_inventory"] = S
-                    self.state["truck1_inventory"] = T
-                    reward += self.rewards["unload"]
-                else:
-                    print("Unexpected Error")
-                    sys.exit(0)
+                T = T - L
+                S = S + L
+                if T < 0 or S > 3:
+                    return self.rewards["illegal"]
+
+                self.state["shop_inventory"][indShop] = S
+                self.state["truck_inventory"][truck_id] = T
+                reward += self.rewards["unload"]
 
         elif type_of_action == 'load':
             if type_of_location != self.position_types["depot"]:
-                return -10000
+                return self.rewards["illegal"]
             else:
                 L = self.actions[action] - 6
-                T = self.state["truck1_inventory"]
+                T = self.state["truck_inventory"][truck_id]
 
                 T = T + L
                 if T > 3:
-                    return -10000
-                self.state["truck1_inventory"] = T
+                    return self.rewards["illegal"]
+
+                self.state["truck_inventory"][truck_id] = T
                 reward += self.rewards["load"]
         return reward
 
-    def __init__(self, n, m):
+    def __init__(self, n, m, t, s, i_t, i_s, rewards=default_rewards): #dimensions of grid, no. of trucks, no. of shops, max inv of truck, max inv of shop
         self.n = n
         self.m = m
+        self.t = t
+        self.s = s
+        self.i_s = i_s
+        self.i_t = i_t
         self.state = {
-            "position": np.array([0, 0]),
-            "truck1_inventory": 3,
-            "shop1_inventory": 2,
-            "shop2_inventory": 3
+            "position": np.array([[0, 0]]),
+            "shop_inventory": np.array([1, 1, 1, 1]),
+            "truck_inventory": np.array([3])
         }
+        self.rewards = rewards
 
     def refresh(self):
-        self.state = {
-            "position": np.array([0, 0]),
-            "truck1_inventory": 3,
-            "shop1_inventory": 2,
-            "shop2_inventory": 3
-        }
+        self.state['position'] = np.array([[0, 0]])
+        self.state["shop_inventory"] = np.array([1, 1, 1, 1])
+        self.state["truck_inventory"] = np.array([3])
 
     def getStateNumber(self):
         state = self.state
-        position = state["position"]
-        positionInd = position[0] * 5 + position[1]
-        return ((4 ** 3) * (positionInd) + (4 ** 2) * (state["truck1_inventory"]) + (4 ** 1) * (
-            state["shop1_inventory"]) + state["shop2_inventory"])
+        positionArray = np.array([i[0] * self.m + i[1] for i in state["position"]])  # Each element b/w 0-14
+
+        shopStateNumber = 0
+        for i in range(self.s):
+            shopStateNumber += state["shop_inventory"][i] * ((self.i_s)**(self.s - i - 1))
+
+        truckInventoryState = 0
+        for i in range(self.t):
+            truckInventoryState += state["truck_inventory"][i] * ((self.i_t)**(self.t - i - 1))
+        
+        positionStateNumber = 0
+        for i in range(self.t):
+            positionStateNumber += positionArray[i] * ((self.m*self.n)**(self.t - 1 - i))
+        
+        ans = (self.i_t**self.t) * (self.i_s**self.s) * positionStateNumber + (self.i_t**self.t) * shopStateNumber + truckInventoryState  # 0 - 57599
+        return ans
+
+
+    def moveTruck(self, position, action, n, m):
+        reward = 0
+        if action == "go_left":
+            if position[1] != 0:
+                position[1] -= 1
+                reward = self.rewards["fuel"]
+            else:
+                reward = self.rewards["wall"]
+        if action == "go_right":
+            if position[1] != m - 1:
+                position[1] += 1
+                reward = self.rewards["fuel"]
+            else:
+                reward = self.rewards["wall"]
+        if action == "go_up":
+            if position[0] != 0:
+                position[0] -= 1
+                reward = self.rewards["fuel"]
+            else:
+                reward = self.rewards["wall"]
+        if action == "go_down":
+            if position[0] != n - 1:
+                position[0] += 1
+                reward = self.rewards["fuel"]
+            else:
+                reward = self.rewards["wall"]
+        return position, reward
